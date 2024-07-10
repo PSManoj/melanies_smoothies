@@ -12,28 +12,24 @@ cnx = st.connection("snowflake")
 session = cnx.session()
 
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'))
-fruit_options = my_dataframe.collect()
 
-ingredients_list = st.multiselect(
-    "Choose up to 5 ingredients:", 
-    [row['FRUIT_NAME'] for row in fruit_options], max_selections = 5 )
+ingredients_list=st.multiselect('Choose up to 5 ingredients:', my_dataframe, max_selections=5)
 
 if ingredients_list:
-    ingredients_string = ' '.join(ingredients_list)
+    
+    ingredients_string=''
+    for fruit_chosen in ingredients_list:
+        ingredients_string+=fruit_chosen+' '
 
-    my_insert_stmt = f"""
-    INSERT INTO smoothies.public.orders (INGREDIENTS, NAME_ON_ORDER)
-    VALUES ('{ingredients_string}', '{name_on_order}')
-    """
-
-   # st.write("Generated SQL Statement:")
-   # st.code(my_insert_stmt, language='sql')  # Display the generated SQL statement for copying
-
-    time_to_insert = st.button('Submit Order')
-
+    my_insert_stmt = """ insert into smoothies.public.orders(ingredients,name_on_order)
+            values ('""" + ingredients_string + """','"""+ name_on_order+"""')"""
+    #st.write(my_insert_stmt)
+    
+    #st.text(ingredients_string)
+    time_to_insert=st.button('Submit Order')
     if time_to_insert:
         session.sql(my_insert_stmt).collect()
-        st.success(f'Your Smoothie is ordered, {name_on_order}!', icon="✅")
+        st.success('Your Smoothie is ordered, '+name_on_order+'!', icon="✅")
 
 #New Section to Display FruitVice nutrition information
 import requests
